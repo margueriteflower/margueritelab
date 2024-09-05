@@ -6,6 +6,8 @@
 	let processedText = $state(''); // Pour suivre le texte déjà traité
 	let audioChunks = $state([]); // Pour stocker les morceaux d'audio générés
 	let isPlaying = $state(false); // Pour suivre l'état de lecture de l'audio
+	let allSentences = $state([]);
+	let currentIndex = $state(0); // Pour suivre l'index de la phrase courante
 
 	const submitOPENAI = async (input) => {
 		try {
@@ -16,6 +18,8 @@
 				},
 				body: JSON.stringify({ input: input })
 			});
+
+			textInput = '';
 
 			const reader = response.body.getReader();
 			const decoder = new TextDecoder();
@@ -33,17 +37,11 @@
 				if (sentences) {
 					for (const sentence of sentences) {
 						await processSentence(sentence);
+						allSentences.push(sentence);
 					}
 					processedText += newText; // Mettre à jour processedText après avoir traité
 				}
 			}
-
-			// // Traiter le dernier fragment restant après la fin du flux
-			// const remainingText = textAnswer.substring(processedText.length).trim();
-			// if (remainingText) {
-			// 	await processSentence(remainingText);
-			// 	processedText += remainingText;
-			// }
 		} catch (error) {
 			console.error('Error fetching stream:', error);
 			textAnswer = 'Error fetching data';
@@ -93,7 +91,12 @@
 		const audioUrl = URL.createObjectURL(audioBuffer);
 		const audioElement = new window.Audio(audioUrl);
 
-		audioElement.onended = playAudioChunks;
+		audioElement.onended = () => {
+			if (currentIndex < allSentences.length) {
+				currentIndex++; // Incrémente l'index seulement s'il y a une phrase suivante
+			}
+			playAudioChunks(); // Continue à jouer les morceaux suivants
+		};
 		audioElement.play();
 	}
 </script>
@@ -101,7 +104,7 @@
 <form
 	onsubmit={(e) => {
 		e.preventDefault();
-		submitOPENAI(textInput);
+		if (textInput !== '') submitOPENAI(textInput);
 	}}
 >
 	<div>
@@ -110,6 +113,9 @@
 	</div>
 </form>
 
-<p>{textAnswer}</p>
+<!-- <p>Current Index: {currentIndex}</p> -->
+<p>Current Sentence: {allSentences[currentIndex - 1]}</p>
+<!-- <p>All Sentences: {allSentences}</p> -->
+<p>All Text: {textAnswer}</p>
 
 <Audio {submitOPENAI} />
