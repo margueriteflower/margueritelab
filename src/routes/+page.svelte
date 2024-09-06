@@ -2,6 +2,7 @@
 	import Audio from '../lib/components/global/Audio.svelte';
 	import Bubbles from '../lib/components/global/Bubbles.svelte';
 	import gsap from 'gsap';
+	import Input from '../lib/components/global/Input.svelte';
 
 	let textAnswer = $state('');
 	let textInput = $state('');
@@ -179,22 +180,48 @@
 	}
 </script>
 
-<form
-	onsubmit={(e) => {
-		e.preventDefault();
-		if (textInput !== '') submitOPENAI(textInput);
-	}}
->
-	<div>
-		<input type="text" bind:value={textInput} placeholder="Ask something" />
-		<button type="submit">Ask AI</button>
+<div id="home">
+	<div class="abs">
+		<form
+			onsubmit={(e) => {
+				e.preventDefault();
+				if (textInput !== '') submitOPENAI(textInput);
+			}}
+		>
+			<div>
+				<input type="text" bind:value={textInput} placeholder="Ask something" />
+				<button type="submit">Ask AI</button>
+			</div>
+		</form>
+
+		<!-- Afficher la phrase courante -->
+		<p>Current Sentence: {allSentences[sentenceIndex]}</p>
+		<p>All Text: {textAnswer}</p>
+
+		<Audio {submitOPENAI} />
 	</div>
-</form>
 
-<!-- Afficher la phrase courante -->
-<p>Current Sentence: {allSentences[sentenceIndex]}</p>
-<p>All Text: {textAnswer}</p>
+	<Bubbles />
 
-<Audio {submitOPENAI} />
+	<div class="bottom">
+		<Input />
+	</div>
+</div>
 
-<Bubbles />
+<style>
+	#home {
+		width: 680px;
+		margin: auto;
+		display: flex;
+		flex-direction: column;
+		height: 100svh;
+	}
+
+	.bottom {
+		background-color: black;
+	}
+
+	.abs {
+		position: absolute;
+	}
+</style>

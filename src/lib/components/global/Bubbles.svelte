@@ -12,7 +12,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		height: 100svh;
+		height: 80svh;
 		flex-direction: row-reverse;
 	}
 
