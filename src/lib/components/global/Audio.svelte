@@ -9,6 +9,7 @@
 	let audioContext = $state();
 	let analyser = $state();
 	let dataArray = $state([]);
+	let raf = $state();
 
 	async function startRecording() {
 		try {
@@ -30,7 +31,7 @@
 			mediaRecorder.start();
 			isRecording = true;
 
-			animateVisualizer();
+			raf = requestAnimationFrame(animateVisualizer);
 		} catch (error) {
 			console.error('Error accessing microphone:', error);
 		}
@@ -44,7 +45,12 @@
 			};
 			mediaRecorder.stop();
 			isRecording = false;
-			cancelAnimationFrame(animateVisualizer);
+			cancelAnimationFrame(raf);
+
+			gsap.to('#bubbles .circle', {
+				height: 168,
+				duration: 0.5
+			});
 		});
 	}
 
@@ -82,7 +88,7 @@
 
 		const silenceThreshold = 50;
 
-		requestAnimationFrame(animateVisualizer);
+		raf = requestAnimationFrame(animateVisualizer);
 
 		gsap.to('#bubbles .circle', {
 			height: (index) => {
