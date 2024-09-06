@@ -7,9 +7,22 @@
 	let processedText = $state(''); // Pour suivre le texte déjà traité
 	let audioChunks = $state([]); // Pour stocker les morceaux d'audio générés
 	let isPlaying = $state(false); // Pour suivre l'état de lecture de l'audio
-	let allSentences = $state([]);
-	let currentIndex = $state(0); // Pour suivre l'index de la phrase courante
+	let allSentences = $state([]); // Stocker toutes les phrases générées
+	let sentenceIndex = $state(0); // Pour suivre l'index de la phrase courante
+	let audioElements = $state([]); // Liste des éléments audio pour chaque phrase
 
+	const resetState = () => {
+		textInput = '';
+
+		textAnswer = '';
+		processedText = '';
+		isPlaying = false;
+		allSentences = [];
+		sentenceIndex = 0;
+		audioElements = [];
+	};
+
+	// Fonction pour envoyer la requête à l'API OpenAI et obtenir des réponses
 	const submitOPENAI = async (input) => {
 		try {
 			const response = await fetch('/api/assistant', {
@@ -20,7 +33,7 @@
 				body: JSON.stringify({ input: input })
 			});
 
-			textInput = '';
+			resetState();
 
 			const reader = response.body.getReader();
 			const decoder = new TextDecoder();
@@ -31,7 +44,7 @@
 				done = readerDone;
 				textAnswer += decoder.decode(value, { stream: true });
 
-				// Découpe le texte en phrases, mais seulement les nouvelles
+				// Découpe le texte en phrases et gère seulement les nouvelles
 				const newText = textAnswer.substring(processedText.length);
 				const sentences = newText.match(/[^.!?]+[.!?]+[\s]*/g);
 
@@ -40,7 +53,7 @@
 						await processSentence(sentence);
 						allSentences.push(sentence);
 					}
-					processedText += newText; // Mettre à jour processedText après avoir traité
+					processedText += newText; // Met à jour processedText après avoir traité
 				}
 			}
 		} catch (error) {
@@ -49,6 +62,7 @@
 		}
 	};
 
+	// Fonction pour traiter chaque phrase et la transformer en audio
 	async function processSentence(sentence) {
 		if (!sentence) return;
 
@@ -61,44 +75,48 @@
 			body: JSON.stringify({ input: sentence })
 		});
 
-		const reader = ttsResponse.body.getReader();
-		let done = false;
+		// Lire la réponse sous forme de Blob pour créer un élément audio
+		const audioBlob = await ttsResponse.blob();
+		const audioUrl = URL.createObjectURL(audioBlob);
+		const audioElement = new window.Audio(audioUrl); // Créer un élément audio
 
-		while (!done) {
-			const { value, done: readerDone } = await reader.read();
-			done = readerDone;
+		// Ajouter l'élément audio à la liste pour lecture
+		audioElements.push({
+			audioElement,
+			sentence
+		});
 
-			// Ajouter le morceau au tableau des morceaux audio
-			audioChunks.push(value);
-
-			// Si rien ne joue, commencer la lecture
-			if (!isPlaying) {
-				playAudioChunks();
-			}
+		// Si rien ne joue, commencer la lecture immédiatement
+		if (!isPlaying) {
+			playNextAudio();
 		}
 	}
 
-	async function playAudioChunks() {
-		if (audioChunks.length === 0) {
-			isPlaying = false;
-			return;
+	// Fonction pour jouer le prochain fichier audio
+	async function playNextAudio() {
+		if (sentenceIndex >= audioElements.length) {
+			return; // Toutes les phrases ont été lues
 		}
 
-		isPlaying = true;
+		const { audioElement, sentence } = audioElements[sentenceIndex];
+		allSentences[sentenceIndex] = sentence; // Met à jour la phrase courante
 
-		const audioBuffer = new Blob(audioChunks, { type: 'audio/mpeg' });
-		audioChunks = []; // Réinitialiser les morceaux après les avoir combinés
+		// S'assurer que l'élément audio est prêt à être joué
+		audioElement.addEventListener('canplaythrough', () => {
+			audioElement.play().catch((error) => {
+				console.error('Failed to play audio:', error);
+			});
+		});
 
-		const audioUrl = URL.createObjectURL(audioBuffer);
-		const audioElement = new window.Audio(audioUrl);
+		audioElement.addEventListener('error', (event) => {
+			console.error('Error with audio element:', event);
+		});
 
 		audioElement.onended = () => {
-			if (currentIndex < allSentences.length) {
-				currentIndex++; // Incrémente l'index seulement s'il y a une phrase suivante
-			}
-			playAudioChunks(); // Continue à jouer les morceaux suivants
+			sentenceIndex++;
+			URL.revokeObjectURL(audioElement.src); // Libérer l'URL après la lecture
+			playNextAudio(); // Jouer l'audio suivant quand le courant est terminé
 		};
-		audioElement.play();
 	}
 </script>
 
@@ -114,9 +132,8 @@
 	</div>
 </form>
 
-<!-- <p>Current Index: {currentIndex}</p> -->
-<p>Current Sentence: {allSentences[currentIndex - 1]}</p>
-<!-- <p>All Sentences: {allSentences}</p> -->
+<!-- Afficher la phrase courante -->
+<p>Current Sentence: {allSentences[sentenceIndex]}</p>
 <p>All Text: {textAnswer}</p>
 
 <Audio {submitOPENAI} />
