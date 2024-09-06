@@ -1,5 +1,6 @@
 <script>
 	import Audio from '../lib/components/global/Audio.svelte';
+	import Bubbles from '../lib/components/global/Bubbles.svelte';
 
 	let textAnswer = $state('');
 	let textInput = $state('');
@@ -119,3 +120,5 @@
 <p>All Text: {textAnswer}</p>
 
 <Audio {submitOPENAI} />
+
+<Bubbles />
