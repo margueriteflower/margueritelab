@@ -5,7 +5,6 @@
 	let textAnswer = $state('');
 	let textInput = $state('');
 	let processedText = $state(''); // Pour suivre le texte déjà traité
-	let audioChunks = $state([]); // Pour stocker les morceaux d'audio générés
 	let isPlaying = $state(false); // Pour suivre l'état de lecture de l'audio
 	let allSentences = $state([]); // Stocker toutes les phrases générées
 	let sentenceIndex = $state(0); // Pour suivre l'index de la phrase courante
@@ -101,16 +100,17 @@
 		const { audioElement, sentence } = audioElements[sentenceIndex];
 		allSentences[sentenceIndex] = sentence; // Met à jour la phrase courante
 
-		// S'assurer que l'élément audio est prêt à être joué
-		audioElement.addEventListener('canplaythrough', () => {
-			audioElement.play().catch((error) => {
-				console.error('Failed to play audio:', error);
-			});
-		});
+		// // // S'assurer que l'élément audio est prêt à être joué
+		// audioElement.addEventListener('canplaythrough', () => {
+		// 	audioElement.play().catch((error) => {
+		// 		console.error('Failed to play audio:', error);
+		// 	});
+		// });
 
-		audioElement.addEventListener('error', (event) => {
-			console.error('Error with audio element:', event);
-		});
+		audioElement.play();
+		// audioElement.addEventListener('error', (event) => {
+		// 	console.error('Error with audio element:', event);
+		// });
 
 		audioElement.onended = () => {
 			sentenceIndex++;
