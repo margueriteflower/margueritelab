@@ -73,29 +73,32 @@
 		submitOPENAI(data.transcription);
 	}
 
-	function animateVisualizer() {
-		// Obtenir les données de fréquence et ajuster la taille des cercles
+	function animateVisualizer(e) {
+		const elapsedTime = e / 1000;
+
 		analyser.getByteFrequencyData(dataArray);
 
-		// Calculer l'intensité moyenne
 		const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
 
-		// Définir un seuil pour détecter le silence
-		const silenceThreshold = 50; // Ajustez ce seuil en fonction de la sensibilité souhaitée
+		const silenceThreshold = 50;
 
 		requestAnimationFrame(animateVisualizer);
 
-		// Continuer l'animation si l'enregistrement est toujours en cours et que le son dépasse le seuil
-
 		gsap.to('#bubbles .circle', {
 			height: (index) => {
+				const randomFactor = (Math.sin(elapsedTime * 10 + index / 2) + 1) / 2;
+
 				if (average < silenceThreshold) {
 					return 168;
 				} else {
-					if (index === 0) return 168 + dataArray[index % dataArray.length] * 0.6;
-					if (index === 1) return 168 + dataArray[index % dataArray.length] * 1.3;
-					if (index === 2) return 168 + dataArray[index % dataArray.length] * 0.8;
-					if (index === 3) return 168 + dataArray[index % dataArray.length] * 0.5;
+					if (index === 0)
+						return 168 + dataArray[index % dataArray.length] * 0.6 + randomFactor * 200;
+					if (index === 1)
+						return 168 + dataArray[index % dataArray.length] * 1.3 + randomFactor * 200;
+					if (index === 2)
+						return 168 + dataArray[index % dataArray.length] * 0.8 + randomFactor * 200;
+					if (index === 3)
+						return 168 + dataArray[index % dataArray.length] * 0.5 + randomFactor * 200;
 				}
 			},
 			duration: 0.5

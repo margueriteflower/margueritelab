@@ -21,6 +21,6 @@
 		height: 168px;
 		background-color: var(--cream);
 		border-radius: 999px;
-		will-change: all;
+		will-change: height;
 	}
 </style>
