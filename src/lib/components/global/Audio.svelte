@@ -1,7 +1,16 @@
 <script>
 	import gsap from 'gsap';
+	import { onMount } from 'svelte';
+	let ctx = $state();
+	let component = $state();
 
-	let { submitOPENAI } = $props();
+	onMount(() => {
+		ctx = gsap.context(() => {});
+
+		return () => ctx.revert();
+	});
+
+	let { submitOPENAI, children } = $props();
 
 	let isRecording = $state(false);
 	let mediaRecorder;
@@ -31,6 +40,10 @@
 			mediaRecorder.start();
 			isRecording = true;
 
+			ctx.add(() => {
+				gsap.to(component, { backgroundColor: 'var(--green)' });
+			});
+
 			raf = requestAnimationFrame(animateVisualizer);
 		} catch (error) {
 			console.error('Error accessing microphone:', error);
@@ -45,11 +58,16 @@
 			};
 			mediaRecorder.stop();
 			isRecording = false;
+
 			cancelAnimationFrame(raf);
 
-			gsap.to('#bubbles .circle', {
-				height: 168,
-				duration: 0.5
+			ctx.add(() => {
+				gsap.to('#bubbles .circle', {
+					height: 168,
+					duration: 0.5
+				});
+
+				gsap.to(component, { backgroundColor: 'var(--blue)' });
 			});
 		});
 	}
@@ -112,6 +130,17 @@
 	}
 </script>
 
-<button onclick={handleRecording}>
-	{isRecording ? 'Stop Recording' : 'Start Recording'}
-</button>
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<div onclick={handleRecording} bind:this={component}>
+	{#if children}
+		{@render children()}
+	{/if}
+</div>
+
+<style>
+	div {
+		min-width: 44px;
+		height: 44px;
+	}
+</style>

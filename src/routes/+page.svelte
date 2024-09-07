@@ -13,6 +13,8 @@
 	let audioElements = $state([]); // Liste des éléments audio pour chaque phrase
 	let raf = $state();
 
+	$inspect(textInput);
+
 	// Variables pour visualizer
 	let audioContext;
 	let analyser;
@@ -204,7 +206,7 @@
 	<Bubbles />
 
 	<div class="bottom">
-		<Input />
+		<Input bind:textInput {submitOPENAI} />
 	</div>
 </div>
 

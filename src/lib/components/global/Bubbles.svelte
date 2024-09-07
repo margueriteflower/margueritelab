@@ -19,7 +19,7 @@
 	.circle {
 		width: 168px;
 		height: 168px;
-		background-color: var(--cream);
+		background-color: var(--blue);
 		border-radius: 999px;
 		will-change: height;
 	}
