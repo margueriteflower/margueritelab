@@ -10,7 +10,7 @@
 		return () => ctx.revert();
 	});
 
-	let { submitOPENAI, children } = $props();
+	let { submitOPENAI, children, textInput = $bindable() } = $props();
 
 	let isRecording = $state(false);
 	let mediaRecorder;
@@ -41,7 +41,7 @@
 			isRecording = true;
 
 			ctx.add(() => {
-				gsap.to(component, { backgroundColor: 'var(--green)' });
+				gsap.to(component, { backgroundColor: '#34c759' });
 			});
 
 			raf = requestAnimationFrame(animateVisualizer);
@@ -67,7 +67,7 @@
 					duration: 0.5
 				});
 
-				gsap.to(component, { backgroundColor: 'var(--blue)' });
+				gsap.to(component, { backgroundColor: '#007aff' });
 			});
 		});
 	}
@@ -91,6 +91,8 @@
 		});
 
 		const data = await response.json();
+
+		textInput = data.transcription;
 
 		console.log('Transcription:', data.transcription);
 

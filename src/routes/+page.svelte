@@ -1,5 +1,4 @@
 <script>
-	import Audio from '../lib/components/global/Audio.svelte';
 	import Bubbles from '../lib/components/global/Bubbles.svelte';
 	import gsap from 'gsap';
 	import Input from '../lib/components/global/Input.svelte';
@@ -22,7 +21,7 @@
 	let bufferLength;
 
 	const resetState = () => {
-		textInput = '';
+		// textInput = '';
 
 		textAnswer = '';
 		processedText = '';
@@ -31,6 +30,10 @@
 		sentenceIndex = 0;
 		audioElements = [];
 	};
+
+	$effect(() => {
+		gsap.to('');
+	});
 
 	// Fonction pour envoyer la requête à l'API OpenAI et obtenir des réponses
 	const submitOPENAI = async (input) => {
@@ -183,27 +186,14 @@
 </script>
 
 <div id="home">
-	<div class="abs">
-		<form
-			onsubmit={(e) => {
-				e.preventDefault();
-				if (textInput !== '') submitOPENAI(textInput);
-			}}
-		>
-			<div>
-				<input type="text" bind:value={textInput} placeholder="Ask something" />
-				<button type="submit">Ask AI</button>
-			</div>
-		</form>
-
-		<!-- Afficher la phrase courante -->
-		<p>Current Sentence: {allSentences[sentenceIndex]}</p>
-		<p>All Text: {textAnswer}</p>
-
-		<Audio {submitOPENAI} />
-	</div>
-
 	<Bubbles />
+
+	<div class="mid">
+		<!-- <p>Current Sentence: {allSentences[sentenceIndex]}</p>
+			<p>All Text: {textAnswer}</p> -->
+
+		<div class="question">{textInput}</div>
+	</div>
 
 	<div class="bottom">
 		<Input bind:textInput {submitOPENAI} />
@@ -225,5 +215,36 @@
 
 	.abs {
 		position: absolute;
+	}
+
+	.mid {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 20vh;
+
+		.question {
+			position: absolute;
+			display: flex;
+			align-items: center;
+
+			max-width: 500px;
+
+			top: 0%;
+			left: 50%;
+			transform: translateX(-50%);
+
+			margin: 0;
+			text-align: center;
+
+			color: #fff;
+			font-size: 24px;
+			font-weight: 500;
+			letter-spacing: -0.48px;
+
+			white-space: nowrap;
+			overflow: hidden;
+		}
 	}
 </style>
