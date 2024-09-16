@@ -1,5 +1,6 @@
 uniform float uTime;
 uniform vec4 uResolution;
+uniform float uVisualizer;
 
 varying vec2 vUv;
 varying vec3 vPosition;
@@ -14,13 +15,13 @@ void main() {
     uv.x *= uResolution.x / uResolution.y;
     uv.y += .5;
     
-    uv.x += sin(cos(uv.x*sin(uv.x/2.)-uTime)+uTime)*5.;
+    uv.x += sin(cos(uv.x*sin(uv.x/2.)) * (uVisualizer * 5.) + uTime) * 1.; // 5. for the randomness // TWEAK HERE
     
     vec3 uvRGB = vec3(uv.y,uv.y,uv.y) * 5.;
     
-    uvRGB.x += (cos(uv.x)*sin(uTime)+cos(uv.x+uTime*2.))*0.3;
-    uvRGB.y += (cos(uv.x+2.)*sin(uTime-2.)+cos(uv.x+uTime*2.))*0.3;
-    uvRGB.z += (cos(uv.x+4.)*sin(uTime-4.)+cos(uv.x+uTime*2.))*0.3;
+    uvRGB.x += (cos(uv.x)*sin(uTime)+cos(uv.x + uTime)) * 0.3;
+    uvRGB.y += (cos(uv.x+2.)*sin(uTime-2.)+cos(uv.x + uTime)) * 0.3;
+    uvRGB.z += (cos(uv.x+4.)*sin(uTime-4.)+cos(uv.x + uTime)) * 0.3;
     
     float a = smoothstep(0., abs(uvRGB.x), 0.08);
     float b = smoothstep(0., abs(uvRGB.y), 0.08);

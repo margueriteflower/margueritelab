@@ -40,7 +40,7 @@
 		height: 70svh;
 		flex-direction: row-reverse;
 		/* filter: blur(20px); */
-		opacity: 0;
+		display: none;
 	}
 
 	.circle {

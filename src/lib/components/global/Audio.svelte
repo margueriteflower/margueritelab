@@ -62,12 +62,7 @@
 			cancelAnimationFrame(raf);
 
 			ctx.add(() => {
-				gsap.to('#bubbles .circle', {
-					height: 168,
-					duration: 0.5
-				});
-
-				gsap.to(component, { backgroundColor: '#007aff' });
+				gsap.to(component, { backgroundColor: 'transparent' });
 			});
 		});
 	}
@@ -110,25 +105,27 @@
 
 		raf = requestAnimationFrame(animateVisualizer);
 
-		gsap.to('#bubbles .circle', {
-			height: (index) => {
-				const randomFactor = (Math.sin(elapsedTime * 10 + index / 2) + 1) / 2;
+		window.dispatchEvent(new CustomEvent('audioVisualizer', { detail: dataArray }));
 
-				if (average < silenceThreshold) {
-					return 168;
-				} else {
-					if (index === 0)
-						return 168 + dataArray[index % dataArray.length] * 0.6 + randomFactor * 200;
-					if (index === 1)
-						return 168 + dataArray[index % dataArray.length] * 1.3 + randomFactor * 200;
-					if (index === 2)
-						return 168 + dataArray[index % dataArray.length] * 0.8 + randomFactor * 200;
-					if (index === 3)
-						return 168 + dataArray[index % dataArray.length] * 0.5 + randomFactor * 200;
-				}
-			},
-			duration: 0.5
-		});
+		// gsap.to('#bubbles .circle', {
+		// 	height: (index) => {
+		// 		const randomFactor = (Math.sin(elapsedTime * 10 + index / 2) + 1) / 2;
+
+		// 		if (average < silenceThreshold) {
+		// 			return 168;
+		// 		} else {
+		// 			if (index === 0)
+		// 				return 168 + dataArray[index % dataArray.length] * 0.6 + randomFactor * 200;
+		// 			if (index === 1)
+		// 				return 168 + dataArray[index % dataArray.length] * 1.3 + randomFactor * 200;
+		// 			if (index === 2)
+		// 				return 168 + dataArray[index % dataArray.length] * 0.8 + randomFactor * 200;
+		// 			// if (index === 3)
+		// 			// 	return 168 + dataArray[index % dataArray.length] * 0.5 + randomFactor * 200;
+		// 		}
+		// 	},
+		// 	duration: 0.5
+		// });
 	}
 </script>
 

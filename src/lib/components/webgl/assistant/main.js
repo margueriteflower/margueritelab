@@ -3,6 +3,7 @@ import vertex from './shaders/vertex.glsl?raw';
 import fragment from './shaders/fragment.glsl?raw';
 // import GUI from 'lil-gui';
 // import Stats from './Stats';
+import gsap from 'gsap';
 
 export default class Experience {
 	constructor(canvas) {
@@ -11,6 +12,8 @@ export default class Experience {
 		this.canvas = canvas;
 
 		this.scene = new THREE.Scene();
+
+		this.ctx = gsap.context();
 
 		this.setRenderer();
 		this.setCamera();
@@ -32,7 +35,8 @@ export default class Experience {
 						value: new THREE.Vector2(window.innerWidth, window.innerHeight)
 					},
 					uTime: { value: 0 },
-					uFrequency: { value: 0 }
+					uFrequency: { value: 0 },
+					uVisualizer: { value: 0 }
 				}
 			})
 		);
@@ -79,6 +83,23 @@ export default class Experience {
 	setEvents() {
 		this.resize = this.resize.bind(this);
 		window.addEventListener('resize', this.resize);
+
+		window.addEventListener('audioVisualizer', (e) => {
+			const dataArray = e.detail;
+
+			const silenceThreshold = 50;
+			const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+
+			// const randomFactor = (Math.sin(this.elapsedTime * 10 + 0 / 2) + 1) / 2;
+
+			gsap.to(this.mesh.material.uniforms.uVisualizer, {
+				value: () => {
+					if (average < silenceThreshold) return 0;
+					return 4;
+				},
+				duration: 3
+			});
+		});
 	}
 
 	resize() {
@@ -151,5 +172,7 @@ export default class Experience {
 	destroy() {
 		window.removeEventListener('resize', this.resize);
 		cancelAnimationFrame(this.ticker); // not working
+
+		this.ctx.revert();
 	}
 }

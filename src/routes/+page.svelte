@@ -13,6 +13,7 @@
 	let sentenceIndex = $state(0); // Pour suivre l'index de la phrase courante
 	let audioElements = $state([]); // Liste des éléments audio pour chaque phrase
 	let raf = $state();
+	let fullText = $state('close');
 
 	// Variables pour visualizer
 	let audioContext;
@@ -146,17 +147,8 @@
 		let source = audioContext.createMediaElementSource(audioElement);
 		source.connect(analyser);
 		analyser.connect(audioContext.destination);
-		// // // S'assurer que l'élément audio est prêt à être joué
-		// audioElement.addEventListener('canplaythrough', () => {
-		// 	audioElement.play().catch((error) => {
-		// 		console.error('Failed to play audio:', error);
-		// 	});
-		// });
 
 		audioElement.play();
-		// audioElement.addEventListener('error', (event) => {
-		// 	console.error('Error with audio element:', event);
-		// });
 
 		audioElement.onended = () => {
 			sentenceIndex++;
@@ -167,42 +159,29 @@
 	}
 
 	function animateVisualizer(e) {
-		const elapsedTime = e / 1000;
-
 		analyser.getByteFrequencyData(dataArray); // Obtenir les données de fréquence
-
-		// console.log(dataArray);
-
-		const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
-
-		const silenceThreshold = 50;
 
 		raf = requestAnimationFrame(animateVisualizer);
 
-		gsap.to('#bubbles .circle', {
-			height: (index) => {
-				const randomFactor = (Math.sin(elapsedTime * 10 + index / 2) + 1) / 2;
-
-				if (average < silenceThreshold) {
-					return 168;
-				} else {
-					if (index === 0)
-						return 168 + dataArray[index % dataArray.length] * 0.6 + randomFactor * 200;
-					if (index === 1)
-						return 168 + dataArray[index % dataArray.length] * 1.3 + randomFactor * 200;
-					if (index === 2)
-						return 168 + dataArray[index % dataArray.length] * 0.8 + randomFactor * 200;
-					if (index === 3)
-						return 168 + dataArray[index % dataArray.length] * 0.5 + randomFactor * 200;
-				}
-			},
-			duration: 0.5
-		});
+		window.dispatchEvent(new CustomEvent('audioVisualizer', { detail: dataArray }));
 	}
+
+	const stopAudio = () => {
+		audioElements.forEach(({ audioElement }) => {
+			if (!audioElement.paused) {
+				audioElement.pause(); // Mettre en pause
+				audioElement.currentTime = 0; // Remettre à zéro le temps de lecture
+			}
+		});
+
+		// Réinitialiser l'état de la lecture audio
+		isPlaying = false;
+		sentenceIndex = 0;
+	};
 </script>
 
 <div id="home">
-	<Bubbles />
+	<!-- <Bubbles /> -->
 
 	<div class="mid">
 		<!-- <p>Current Sentence: {allSentences[sentenceIndex]}</p>
@@ -211,10 +190,12 @@
 		<div class="question">{textInput}</div>
 	</div>
 
-	<Fulltext {textAnswer} />
+	<Fulltext {textAnswer} {fullText} />
 
 	<div class="bottom">
-		<Input bind:textInput {submitOPENAI} />
+		<button class="stop" onclick={stopAudio}>Stop</button>
+
+		<Input bind:textInput bind:fullText {submitOPENAI} />
 	</div>
 </div>
 
@@ -230,7 +211,10 @@
 	}
 
 	.bottom {
-		background-color: black;
+		/* background-color: black; */
+		display: flex;
+		align-items: center;
+		flex-direction: column;
 	}
 
 	.abs {
@@ -242,7 +226,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		height: 20vh;
+		height: 90vh;
 
 		.question {
 			position: absolute;
@@ -251,9 +235,9 @@
 
 			max-width: 500px;
 
-			top: 0%;
+			top: 50%;
 			left: 50%;
-			transform: translateX(-50%);
+			transform: translate(-50%, -50%);
 
 			margin: 0;
 			text-align: center;
@@ -273,5 +257,21 @@
 			-webkit-mask-position: 50% 100%;
 			mask-position: 50% 100%;
 		}
+	}
+
+	.stop {
+		display: block;
+		padding: 13px 24px;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 10px;
+		border-radius: 999px;
+		background: var(--red);
+		font-weight: 500;
+		cursor: pointer;
+		margin-bottom: 24px;
+	}
+
+	.full-text {
 	}
 </style>
