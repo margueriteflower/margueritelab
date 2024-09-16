@@ -2,6 +2,7 @@
 	import Bubbles from '../lib/components/global/Bubbles.svelte';
 	import gsap from 'gsap';
 	import Input from '../lib/components/global/Input.svelte';
+	import Fulltext from '../lib/components/global/Fulltext.svelte';
 
 	let textAnswer = $state('');
 	let textInput = $state('');
@@ -11,8 +12,6 @@
 	let sentenceIndex = $state(0); // Pour suivre l'index de la phrase courante
 	let audioElements = $state([]); // Liste des éléments audio pour chaque phrase
 	let raf = $state();
-
-	$inspect(textInput);
 
 	// Variables pour visualizer
 	let audioContext;
@@ -32,7 +31,23 @@
 	};
 
 	$effect(() => {
-		gsap.to('');
+		if (textInput) {
+			gsap.fromTo(
+				'.question',
+				{
+					webkitMaskPosition: '50% 0%',
+					maskPosition: '50% 0%',
+					webkitMaskSize: '400% 400%', // End with larger mask size
+					maskSize: '400% 400%'
+				},
+				{
+					maskPosition: '-20% 0%',
+					delay: 0.1,
+					duration: 5, // Adjust the duration as needed
+					ease: 'power2.out'
+				}
+			);
+		}
 	});
 
 	// Fonction pour envoyer la requête à l'API OpenAI et obtenir des réponses
@@ -195,6 +210,8 @@
 		<div class="question">{textInput}</div>
 	</div>
 
+	<Fulltext {textAnswer} />
+
 	<div class="bottom">
 		<Input bind:textInput {submitOPENAI} />
 	</div>
@@ -245,6 +262,13 @@
 
 			white-space: nowrap;
 			overflow: hidden;
+
+			-webkit-mask-image: radial-gradient(circle, transparent 40%, black 60%);
+			mask-image: radial-gradient(circle, transparent 40%, black 60%);
+			-webkit-mask-size: 50% 50%;
+			mask-size: 50% 50%;
+			-webkit-mask-position: 50% 100%;
+			mask-position: 50% 100%;
 		}
 	}
 </style>

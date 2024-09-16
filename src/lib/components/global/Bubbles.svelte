@@ -39,6 +39,7 @@
 		justify-content: space-between;
 		height: 70svh;
 		flex-direction: row-reverse;
+		/* filter: blur(20px); */
 	}
 
 	.circle {
