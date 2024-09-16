@@ -3,6 +3,7 @@
 	import gsap from 'gsap';
 	import Input from '../lib/components/global/Input.svelte';
 	import Fulltext from '../lib/components/global/Fulltext.svelte';
+	import Experience from '../lib/components/webgl/assistant/Experience.svelte';
 
 	let textAnswer = $state('');
 	let textInput = $state('');
@@ -216,6 +217,8 @@
 		<Input bind:textInput {submitOPENAI} />
 	</div>
 </div>
+
+<Experience />
 
 <style>
 	#home {
