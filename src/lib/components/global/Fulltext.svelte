@@ -24,7 +24,11 @@
 	});
 </script>
 
-<div class="fulltext" bind:this={component}></div>
+<div class="fulltext" bind:this={component}>
+	<div class="container">
+		{textAnswer}
+	</div>
+</div>
 
 <style>
 	.fulltext {
@@ -36,5 +40,20 @@
 		height: 100svh;
 		opacity: 0;
 		visibility: hidden;
+	}
+
+	.container {
+		margin: auto;
+		width: 680px;
+		padding: 20px;
+
+		color: #fff;
+
+		font-family: Inter;
+		font-size: 14px;
+		font-style: normal;
+		font-weight: 500;
+		line-height: 22px; /* 157.143% */
+		letter-spacing: -0.408px;
 	}
 </style>

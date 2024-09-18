@@ -1,9 +1,9 @@
 <script>
-	import Bubbles from '../lib/components/global/Bubbles.svelte';
 	import gsap from 'gsap';
 	import Input from '../lib/components/global/Input.svelte';
 	import Fulltext from '../lib/components/global/Fulltext.svelte';
 	import Experience from '../lib/components/webgl/assistant/Experience.svelte';
+	import { onMount } from 'svelte';
 
 	let textAnswer = $state('');
 	let textInput = $state('');
@@ -21,6 +21,15 @@
 	let dataArray;
 	let bufferLength;
 
+	let ctx = $state();
+	let component = $state();
+
+	onMount(() => {
+		ctx = gsap.context(() => {}, component);
+
+		return () => ctx.revert();
+	});
+
 	const resetState = () => {
 		// textInput = '';
 
@@ -34,21 +43,23 @@
 
 	$effect(() => {
 		if (textInput) {
-			gsap.fromTo(
-				'.question',
-				{
-					webkitMaskPosition: '50% 0%',
-					maskPosition: '50% 0%',
-					webkitMaskSize: '400% 400%', // End with larger mask size
-					maskSize: '400% 400%'
-				},
-				{
-					maskPosition: '-20% 0%',
-					delay: 0.1,
-					duration: 5, // Adjust the duration as needed
-					ease: 'power2.out'
-				}
-			);
+			ctx.add(() => {
+				gsap.fromTo(
+					'.question',
+					{
+						webkitMaskPosition: '50% 0%',
+						maskPosition: '50% 0%',
+						webkitMaskSize: '400% 400%', // End with larger mask size
+						maskSize: '400% 400%'
+					},
+					{
+						maskPosition: '-20% 0%',
+						delay: 0.1,
+						duration: 2, // Adjust the duration as needed
+						ease: 'power2.out'
+					}
+				);
+			});
 		}
 	});
 
@@ -68,6 +79,18 @@
 			const reader = response.body.getReader();
 			const decoder = new TextDecoder();
 			let done = false;
+
+			// mask the question
+			ctx.add(() => {
+				gsap.to('.question', {
+					maskPosition: '-80% 0%',
+					duration: 2, // Adjust the duration as needed
+					ease: 'power2.out',
+					onComplete: () => {
+						gsap.to('.question', { autoAlpha: 0 });
+					}
+				});
+			});
 
 			while (!done) {
 				const { value, done: readerDone } = await reader.read();
@@ -123,38 +146,64 @@
 	}
 
 	// Fonction pour jouer le prochain fichier audio
+	// Store the source outside the function so we can disconnect it later
+	let currentSource = null;
+
 	async function playNextAudio() {
 		if (sentenceIndex >= audioElements.length) {
-			return; // Toutes les phrases ont été lues
+			console.log('here stop');
+			return; // All sentences have been played
 		}
 
 		const { audioElement, sentence } = audioElements[sentenceIndex];
-		allSentences[sentenceIndex] = sentence; // Met à jour la phrase courante
+		allSentences[sentenceIndex] = sentence; // Update the current sentence
 
-		// Créer un AudioContext pour le visualizer si ce n'est pas déjà fait
+		// gsap part for visual effect
+		gsap.fromTo(
+			'.currentSentence',
+			{
+				webkitMaskPosition: '50% 0%',
+				maskPosition: '50% 0%',
+				webkitMaskSize: '400% 400%',
+				maskSize: '400% 400%',
+				opacity: 0
+			},
+			{
+				maskPosition: '-20% 0%',
+				delay: 0.1,
+				duration: 2,
+				ease: 'power2.out',
+				opacity: 1,
+				overwrite: true
+			}
+		);
+
+		// Create AudioContext and visualizer if not already created
 		if (!audioContext) {
-			raf = requestAnimationFrame(animateVisualizer);
-			console.log('here');
-
 			audioContext = new (window.AudioContext || window.webkitAudioContext)();
 			analyser = audioContext.createAnalyser();
-			analyser.fftSize = 256; // Taille du FFT pour l'analyse (256 bins)
+			analyser.fftSize = 256;
 			bufferLength = analyser.frequencyBinCount;
 			dataArray = new Uint8Array(bufferLength);
+			raf = requestAnimationFrame(animateVisualizer);
 		}
 
-		// Pour chaque audio, créer une nouvelle source
-		let source = audioContext.createMediaElementSource(audioElement);
-		source.connect(analyser);
+		// Disconnect the previous source if it exists
+		if (currentSource) {
+			currentSource.disconnect();
+		}
+
+		// Create a new source for the current audio element
+		currentSource = audioContext.createMediaElementSource(audioElement);
+		currentSource.connect(analyser);
 		analyser.connect(audioContext.destination);
 
 		audioElement.play();
 
 		audioElement.onended = () => {
 			sentenceIndex++;
-			URL.revokeObjectURL(audioElement.src); // Libérer l'URL après la lecture
-			source.disconnect();
-			playNextAudio(); // Jouer l'audio suivant quand le courant est terminé
+			URL.revokeObjectURL(audioElement.src); // Free up the URL after use
+			playNextAudio(); // Play the next audio when the current one finishes
 		};
 	}
 
@@ -180,14 +229,14 @@
 	};
 </script>
 
-<div id="home">
+<div id="home" bind:this={component}>
 	<!-- <Bubbles /> -->
 
 	<div class="mid">
-		<!-- <p>Current Sentence: {allSentences[sentenceIndex]}</p>
-			<p>All Text: {textAnswer}</p> -->
+		<p class="currentSentence">{allSentences[sentenceIndex]}</p>
+		<!-- <p>All Text: {textAnswer}</p> -->
 
-		<div class="question">{textInput}</div>
+		<div class="question">{question}</div>
 	</div>
 
 	<Fulltext {textAnswer} {fullText} />
@@ -226,7 +275,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		height: 90vh;
+		height: calc(100svh - 200px);
 
 		.question {
 			position: absolute;
@@ -249,6 +298,31 @@
 
 			white-space: nowrap;
 			overflow: hidden;
+
+			-webkit-mask-image: radial-gradient(circle, transparent 40%, black 60%);
+			mask-image: radial-gradient(circle, transparent 40%, black 60%);
+			-webkit-mask-size: 50% 50%;
+			mask-size: 50% 50%;
+			-webkit-mask-position: 50% 100%;
+			mask-position: 50% 100%;
+		}
+
+		.currentSentence {
+			position: absolute;
+			display: flex;
+			align-items: center;
+			text-align: center;
+
+			font-size: 24px;
+			font-weight: 500;
+			letter-spacing: -0.48px;
+
+			width: fit-content;
+			max-width: 680px;
+
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
 
 			-webkit-mask-image: radial-gradient(circle, transparent 40%, black 60%);
 			mask-image: radial-gradient(circle, transparent 40%, black 60%);

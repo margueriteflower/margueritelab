@@ -15,7 +15,7 @@ void main() {
     uv.x *= uResolution.x / uResolution.y;
     uv.y += .5;
     
-    uv.x += sin(cos(uv.x*sin(uv.x/2.)) * (uVisualizer * 5.) + uTime) * 1.; // 5. for the randomness // TWEAK HERE
+    uv.x += sin(cos(uv.x*sin(uv.x/2.) * (uVisualizer * 2.)) * (uVisualizer * 2.) + uTime) * 1.; // 5. for the randomness // TWEAK HERE
     
     vec3 uvRGB = vec3(uv.y,uv.y,uv.y) * 5.;
     

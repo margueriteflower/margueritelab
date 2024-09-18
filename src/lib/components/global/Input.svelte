@@ -8,41 +8,28 @@
 
 	let ctx = $state();
 	let component = $state();
-	let open = $state(false);
 	let expand = $state(false);
 	let readyToTranscript = $state(false);
+	let inputState = $state('intro');
 
 	onMount(() => {
-		ctx = gsap.context(() => {
-			const tl = gsap.timeline();
-			tl.fromTo(
-				'.input',
-				{ width: 54, scale: 0 },
-				{ scale: 1, delay: 0.2, duration: 0.5, ease: 'back.out' }
-			);
-			tl.to('.input', { width: 240, delay: 0.2, duration: 0.8 }, '-=0.2');
-			tl.fromTo('.skip-text', { opacity: 0 }, { opacity: 1, duration: 1 });
+		ctx = gsap.context(() => {}, component);
 
-			// split text
-			splt({ target: '.skip-text' });
-		}, component);
+		updateState('intro');
 
 		return () => ctx.revert();
 	});
 
-	$effect(() => {
-		// if (textInput !== '') {
-		// 	ctx.add(() => {
-		// 		gsap.to('svg:not(.send)', { opacity: 0 });
-		// 		gsap.to('svg.send', { opacity: 1 });
-		// 	});
-		// } else {
-		// 	ctx.add(() => {
-		// 		gsap.to('svg.microphone', { opacity: 1 });
-		// 		gsap.to('svg.send', { opacity: 0 });
-		// 	});
-		// }
-	});
+	const updateState = (newState) => {
+		if (newState) inputState === newState;
+
+		if (inputState === 'intro') return intro();
+		if (inputState === 'intro-clicked') return introClicked();
+		if (inputState === 'micro-clicked' || inputState === 'full') return microClicked();
+		if (inputState === 'open-transcript') return openTranscript();
+		if (inputState === 'close-transcript') return closeTranscript();
+		if (inputState === 'back-to-full') return backToFull();
+	};
 
 	const microShake = () => {
 		const tl = gsap.timeline();
@@ -54,9 +41,26 @@
 		});
 	};
 
-	const click = () => {
-		if (open) return;
-		open = true;
+	const intro = () => {
+		inputState = 'intro-clicked';
+
+		ctx.add(() => {
+			const tl = gsap.timeline();
+			tl.fromTo(
+				'.input',
+				{ width: 54, scale: 0 },
+				{ scale: 1, delay: 0.2, duration: 0.5, ease: 'back.out' }
+			);
+			tl.to('.input', { width: 240, delay: 0.2, duration: 0.8 }, '-=0.2');
+			tl.fromTo('.skip-text', { opacity: 0 }, { opacity: 1, duration: 1 });
+
+			// split text
+			splt({ target: '.skip-text' });
+		});
+	};
+
+	const introClicked = () => {
+		inputState = 'full';
 
 		ctx.add(() => {
 			const tl = gsap.timeline();
@@ -80,15 +84,7 @@
 					});
 				}
 			});
-			// tl.to(
-			// 	'.input',
-			// 	{
-			// 		width: 54,
-			// 		duration: 1,
-			// 		ease: 'power2.inOut'
-			// 	},
-			// 	'-=0.5'
-			// );
+
 			tl.to('.microphone', { opacity: 1 }, '-=0.2');
 			tl.to('.input', { scale: 1.5, ease: 'back.out', duration: 1, onStart: microShake });
 
@@ -113,42 +109,149 @@
 
 			tl3.to('.skip-text', { autoAlpha: 0 });
 			// tl3.to('.placeholder', { opacity: 1, delay: 0.6 });
-			// tl3.to('.warning', { autoAlpha: 1 });
+			tl3.to('.warning', { autoAlpha: 1, delay: 0.4 });
 		});
-
-		const tl = gsap.timeline();
-
-		// tl.to('#bubbles .circle', { scale: 0, stagger: { from: 'end', each: 0.1 } });
-		// tl.to('#bubbles .circle', { scale: 1, stagger: { from: 'end', each: 0.1 } });
-		// tl.to('#bubbles .circle', { scale: 0, stagger: { from: 'end', each: 0.1 } });
 	};
 
-	const mouseenter = () => {
+	const microClicked = () => {
+		inputState = 'open-transcript';
+
 		ctx.add(() => {
-			if (!expand) {
-				gsap.to('.skip-text span.char', { color: '#007aff', stagger: 0.05 });
-				gsap.to('.skip-text span.char', {
-					color: 'rgba(255, 255, 255, 0.75)',
-					stagger: 0.05,
-					delay: 0.2
-				});
+			const tl = gsap.timeline();
 
-				if (!open) gsap.to('button', { x: 5 });
-			}
+			tl.to('.input', {
+				width: 54,
+				duration: 1.3,
+				ease: 'power2.inOut',
+				overwrite: true,
+				onStart: () => {
+					gsap.to('.microphone', { rotate: 20 });
+					gsap.to('.microphone', { rotate: 0, delay: 1 });
+				}
+			});
+
+			tl.to('.input', { scale: 1.5, ease: 'back.out', duration: 1, onStart: microShake });
 		});
 	};
 
-	const mouseleave = () => {
+	const openTranscript = () => {
+		inputState = 'close-transcript';
 		ctx.add(() => {
-			if (!open) gsap.to('button', { x: 0 });
+			const tl = gsap.timeline();
+
+			tl.to('.input', { scale: 1.5, ease: 'back.out', duration: 1, onStart: microShake });
+
+			tl.to('.input', { scale: 1, ease: 'back.out' });
+			tl.to('.input', {
+				width: 680,
+				duration: 1.3,
+				ease: 'power2.inOut',
+				onStart: () => {
+					gsap.to('.microphone', { opacity: 0 });
+					gsap.to('button', { width: 668, duration: 1.3, ease: 'power2.inOut' });
+				}
+			});
+
+			tl.to('.open-transcript', { opacity: 1 });
+
+			readyToTranscript = true;
 		});
 	};
+
+	const closeTranscript = () => {
+		fullText = 'open';
+		inputState = 'back-to-full';
+
+		ctx.add(() => {
+			const tl = gsap.timeline();
+
+			tl.to('.input', {
+				width: 54,
+				duration: 1.3,
+				ease: 'power2.inOut',
+				overwrite: true
+			});
+
+			gsap.to('button', {
+				width: 44,
+				duration: 1.3,
+				ease: 'power2.inOut'
+			});
+
+			tl.to('svg.cross', { opacity: 1 });
+
+			gsap.to('.open-transcript', { opacity: 0 });
+
+			gsap.to('button', { backgroundColor: '#ff3b30' });
+		});
+	};
+
+	const backToFull = () => {
+		inputState = 'full';
+		fullText = 'close';
+
+		ctx.add(() => {
+			const tl = gsap.timeline();
+
+			tl.to('.input', {
+				width: 680,
+				duration: 1.3,
+				ease: 'power2.inOut',
+				overwrite: true
+			});
+
+			gsap.to('button', {
+				width: 44,
+				duration: 1.3,
+				ease: 'power2.inOut',
+				backgroundColor: '#007aff'
+			});
+
+			tl.to('svg.cross', { opacity: 0 });
+
+			gsap.to('.microphone', { autoAlpha: 1 });
+		});
+	};
+
+	$effect(() => {
+		// if (textInput !== '') {
+		// 	ctx.add(() => {
+		// 		gsap.to('svg:not(.send)', { opacity: 0 });
+		// 		gsap.to('svg.send', { opacity: 1 });
+		// 	});
+		// } else {
+		// 	ctx.add(() => {
+		// 		gsap.to('svg.microphone', { opacity: 1 });
+		// 		gsap.to('svg.send', { opacity: 0 });
+		// 	});
+		// }
+	});
 
 	const click2 = () => {
 		expand = !expand;
 
+		if (fullText === 'open') {
+			ctx.add(() => {
+				const tl = gsap.timeline();
+
+				tl.to('.input', {
+					width: 680,
+					duration: 1.3,
+					ease: 'power2.inOut',
+					onStart: () => {
+						gsap.to('.cross', { autoAlpha: 0 });
+						gsap.to('.microphone', { rotate: -20, autoAlpha: 1, delay: 0.5 });
+						gsap.to('.microphone', { rotate: 0, delay: 1.5 });
+					}
+				});
+
+				gsap.to('button', {
+					backgroundColor: '#007aff'
+				});
+			});
+		}
 		// back to small
-		if (expand === true && readyToTranscript === false) {
+		else if (expand === true && readyToTranscript === false) {
 			ctx.add(() => {
 				const tl = gsap.timeline();
 
@@ -171,6 +274,7 @@
 
 			ctx.add(() => {
 				const tl = gsap.timeline();
+
 				tl.to('.input', {
 					width: 54,
 					duration: 1.3,
@@ -178,7 +282,11 @@
 					overwrite: true
 				});
 
-				gsap.to('button', { width: 44, duration: 1.3, ease: 'power2.inOut' });
+				gsap.to('button', {
+					width: 44,
+					duration: 1.3,
+					ease: 'power2.inOut'
+				});
 
 				tl.to('svg.cross', { opacity: 1 });
 
@@ -209,6 +317,27 @@
 			});
 		}
 	};
+
+	const mouseenter = () => {
+		ctx.add(() => {
+			if (!expand) {
+				gsap.to('.skip-text span.char', { color: '#007aff', stagger: 0.05 });
+				gsap.to('.skip-text span.char', {
+					color: 'rgba(255, 255, 255, 0.75)',
+					stagger: 0.05,
+					delay: 0.2
+				});
+
+				if (inputState === 'intro') gsap.to('button', { x: 5 });
+			}
+		});
+	};
+
+	const mouseleave = () => {
+		ctx.add(() => {
+			if (inputState === 'intro') gsap.to('button', { x: 0 });
+		});
+	};
 </script>
 
 <div class="container" bind:this={component}>
@@ -217,11 +346,18 @@
 	<form
 		onsubmit={(e) => {
 			e.preventDefault();
-			if (textInput !== '' && fullText !== 'open') submitOPENAI(textInput);
+			if (textInput !== '' || fullText !== 'open') submitOPENAI(textInput);
 		}}
 	>
-		<div class="input" onclick={click} onmouseenter={mouseenter} onmouseleave={mouseleave}>
-			<button onclick={click2}>
+		<div
+			class="input"
+			onclick={() => {
+				if (inputState === 'intro-clicked') return updateState('intro-clicked');
+			}}
+			onmouseenter={mouseenter}
+			onmouseleave={mouseleave}
+		>
+			<button onclick={updateState}>
 				<Audio {submitOPENAI} bind:textInput>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -448,7 +584,7 @@
 		opacity: 0;
 		visibility: hidden;
 		text-align: center;
-		margin-top: 12px;
+		margin-top: 24px;
 	}
 
 	.open-transcript {
